@@ -1,4 +1,3 @@
-
 import logging
 from datetime import datetime
 
@@ -53,24 +52,6 @@ class Command(BaseCommand):
             replace_existing=True,
         )
         logger.info("Added job 'my_job'.")
-
-        # scheduler.add_job(
-        #     weekly_tasks,
-        #     trigger=CronTrigger(day_of_week="*/1"),  # Каждую неделю
-        #     id="weekly_job",  # Идентификатор, присвоенный каждому заданию, ДОЛЖЕН быть уникальным.
-        #     max_instances=1,
-        #     replace_existing=True,
-        # )
-        # logger.info("Added job 'weekly_job'.")
-        #
-        # scheduler.add_job(
-        #     monthly_tasks,
-        #     trigger=CronTrigger(day="*/30"),  # Каждый месяц
-        #     id="monthly_job",  # Идентификатор, присвоенный каждому заданию, ДОЛЖЕН быть уникальным.
-        #     max_instances=1,
-        #     replace_existing=True,
-        # )
-        # logger.info("Added job 'monthly_job'.")
 
         scheduler.add_job(
             delete_old_job_executions,

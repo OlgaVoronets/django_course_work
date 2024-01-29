@@ -57,7 +57,7 @@ class MailingUpdateView(LoginRequiredMixin, UpdateView):
     """Редактирование рассылки"""
     model = Mailing
     form_class = MailingForm
-    success_url = reverse_lazy('mailing:home')
+    success_url = reverse_lazy('mailing:mailing_list')
 
     def get_object(self, queryset=None):
         self.object = super().get_object(queryset)
