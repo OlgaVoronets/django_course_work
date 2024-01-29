@@ -16,7 +16,7 @@ class HomePageView(TemplateView):
     template_name = 'mailing/main_page.html'
 
 
-class MailingListView(ListView):
+class MailingListView(LoginRequiredMixin, ListView):
     """Просмотр списка рассылок"""
     model = Mailing
 
@@ -34,11 +34,11 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         formset = self.get_context_data()['formset']
+        self.object.owner = self.request.user
         self.object = form.save()
         if formset.is_valid():
             formset.instance = self.object
             formset.save()
-
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
