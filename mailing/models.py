@@ -2,7 +2,9 @@ from django.db import models
 from django.utils import timezone
 
 from config import settings
-from services import NULLABLE, STATUS_CHOICES, PERIOD_CHOICES, LOG_CHOICES
+
+
+NULLABLE = {'null': True, 'blank': True}
 
 
 class Client(models.Model):
@@ -25,6 +27,19 @@ class Client(models.Model):
 
 class Mailing(models.Model):
     """Настройки рассылки"""
+    """Статусы рассылки"""
+    STATUS_CHOICES = [
+        ('created', 'Создана'),
+        ('started', 'Запущена'),
+        ('completed', 'Завершена'),
+    ]
+    """Периодичность рассылки"""
+    PERIOD_CHOICES = [
+        ('once', '1 раз'),
+        ('daily', 'Ежедневно'),
+        ('weekly', 'Еженедельно'),
+        ('monthly', 'Ежемесячно'),
+    ]
 
     start_point = models.DateTimeField(verbose_name='Начать рассылку', default=timezone.now)
     stop_point = models.DateTimeField(verbose_name='Завершить рассылку', default=timezone.now)
@@ -34,6 +49,7 @@ class Mailing(models.Model):
 
     client = models.ManyToManyField(Client, verbose_name='Клиенты рассылки', **NULLABLE)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name='Владелец', **NULLABLE)
+    is_active = models.BooleanField(default=True, verbose_name='Активная')
 
 
     def __str__(self):
@@ -42,6 +58,9 @@ class Mailing(models.Model):
     class Meta:
         verbose_name = 'Рассылка'
         verbose_name_plural = 'Рассылки'
+        permissions = [
+            ('set_is_active', 'Изменить aктивность'),
+        ]
 
 
 class Message(models.Model):
@@ -61,12 +80,17 @@ class Message(models.Model):
 
 class Log(models.Model):
     """Логи рассылки"""
+    """Статус рассылки для лога"""
+    LOG_CHOICES = [
+        (True, 'Успешно'),
+        (False, 'Ошибка')
+    ]
     attempt_time = models.DateTimeField(verbose_name='Дата и время последней попытки', **NULLABLE)
     attempt_status = models.CharField(max_length=10, verbose_name='Статус попытки', choices=LOG_CHOICES, default=True)
     server_response = models.TextField(verbose_name='Ответ почтового сервера', **NULLABLE)
 
     mailing = models.ForeignKey(Mailing, verbose_name='Рассылка', on_delete=models.DO_NOTHING, **NULLABLE)
-
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, verbose_name='клиент рассылки', **NULLABLE)
 
     def __str__(self):
         return f'Попытка отправки {self.attempt_time}, статус - {self.attempt_status}'

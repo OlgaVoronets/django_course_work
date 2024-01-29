@@ -1,18 +1,19 @@
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import inlineformset_factory
-from django.shortcuts import render
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect
 
-# Create your views here.
-from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView, DetailView
 
 from mailing.forms import ClientForm, MailingForm, MessageForm
-from mailing.models import Mailing, Client, Message
+from mailing.models import Mailing, Client, Message, Log
 
 
 class HomePageView(TemplateView):
     """Отображение домашней страницы"""
-    template_name = 'mailing/base.html'
+    template_name = 'mailing/main_page.html'
 
 
 class MailingListView(ListView):
@@ -20,12 +21,12 @@ class MailingListView(ListView):
     model = Mailing
 
 
-class MailingDetailView(DetailView):
+class MailingDetailView(LoginRequiredMixin, DetailView):
     """Просмотр рассылки по id"""
     model = Mailing
 
 
-class MailingCreateView(CreateView):
+class MailingCreateView(LoginRequiredMixin, CreateView):
     """Создание рассылки"""
     model = Mailing
     form_class = MailingForm
@@ -52,11 +53,17 @@ class MailingCreateView(CreateView):
         return context_data
 
 
-class MailingUpdateView(UpdateView):
+class MailingUpdateView(LoginRequiredMixin, UpdateView):
     """Редактирование рассылки"""
     model = Mailing
     form_class = MailingForm
     success_url = reverse_lazy('mailing:home')
+
+    def get_object(self, queryset=None):
+        self.object = super().get_object(queryset)
+        if self.object.owner != self.request.user:
+            raise Http404
+        return self.object
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
@@ -76,10 +83,16 @@ class MailingUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class MailingDeleteView(DeleteView):
+class MailingDeleteView(LoginRequiredMixin, DeleteView):
     """Удаление рассылки"""
     model = Mailing
     success_url = reverse_lazy('mailing:home')
+
+    def get_object(self, queryset=None):
+        self.object = super().get_object(queryset)
+        if self.object.owner != self.request.user:
+            raise Http404
+        return self.object
 
 
 class ClientListView(ListView):
@@ -87,17 +100,46 @@ class ClientListView(ListView):
     model = Client
 
 
-class ClientCreateView(CreateView):
+class ClientCreateView(LoginRequiredMixin, CreateView):
     """Создание карточки клиента"""
     model = Client
     form_class = ClientForm
     success_url = reverse_lazy('mailing:client_list')
 
 
-class ClientUpdateView(UpdateView):
+class ClientUpdateView(LoginRequiredMixin, UpdateView):
     """Редактирование карточки клиента"""
     model = Client
     form_class = ClientForm
     success_url = reverse_lazy('mailing:client_list')
 
+    def get_object(self, queryset=None):
+        self.object = super().get_object(queryset)
+        if self.object.owner != self.request.user:
+            raise Http404
+        return self.object
 
+
+class LogListView(ListView):
+    """Просмотр списка логов"""
+    model = Log
+
+    def get_context_data(self, *args, **kwargs):
+        context_data = super().get_context_data(*args, **kwargs)
+
+        context_data['all'] = context_data['object_list'].count()
+        context_data['success'] = context_data['object_list'].filter(attempt_status=True).count()
+        context_data['error'] = context_data['object_list'].filter(attempt_status=False).count()
+        return context_data
+
+
+@login_required
+@permission_required('mailing.set_is_active')
+def active_toggle(request, pk):
+    mailing_item = get_object_or_404(Mailing, pk=pk)
+    if mailing_item.is_active:
+        mailing_item.is_active = False
+    else:
+        mailing_item.is_active = True
+    mailing_item.save()
+    return redirect(reverse('mailing:mailing_list'))

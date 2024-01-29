@@ -11,6 +11,8 @@ from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
 from django_apscheduler import util
 
+from services import my_job
+
 logger = logging.getLogger(__name__)
 
 
@@ -45,12 +47,30 @@ class Command(BaseCommand):
 
         scheduler.add_job(
             my_job,
-            trigger=CronTrigger(second="*/10"),  # Каждые 10 секунд
+            trigger=CronTrigger(minute="*/1"),  # Каждую минуту
             id="my_job",  # Идентификатор, присвоенный каждому заданию, ДОЛЖЕН быть уникальным.
             max_instances=1,
             replace_existing=True,
         )
         logger.info("Added job 'my_job'.")
+
+        # scheduler.add_job(
+        #     weekly_tasks,
+        #     trigger=CronTrigger(day_of_week="*/1"),  # Каждую неделю
+        #     id="weekly_job",  # Идентификатор, присвоенный каждому заданию, ДОЛЖЕН быть уникальным.
+        #     max_instances=1,
+        #     replace_existing=True,
+        # )
+        # logger.info("Added job 'weekly_job'.")
+        #
+        # scheduler.add_job(
+        #     monthly_tasks,
+        #     trigger=CronTrigger(day="*/30"),  # Каждый месяц
+        #     id="monthly_job",  # Идентификатор, присвоенный каждому заданию, ДОЛЖЕН быть уникальным.
+        #     max_instances=1,
+        #     replace_existing=True,
+        # )
+        # logger.info("Added job 'monthly_job'.")
 
         scheduler.add_job(
             delete_old_job_executions,

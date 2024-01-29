@@ -1,13 +1,16 @@
 import random
+
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.mail import send_mail
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy, reverse
 
 from django.views import View
-from django.views.generic import CreateView
+from django.views.generic import CreateView, UpdateView
 
 from config import settings
-from users.forms import UserRegisterForm, NewPasswordForm
+from users.forms import UserRegisterForm, NewPasswordForm, UserForm
 from users.models import User
 
 
@@ -29,6 +32,16 @@ class RegisterView(CreateView):
         return super().form_valid(form)
 
 
+class UserUpdateView(LoginRequiredMixin, UpdateView):
+    model = User
+    success_url = reverse_lazy('users:profile')
+    form_class = UserForm
+
+    def get_object(self, queryset=None):
+        """редактируем текущего пользователя без передачи пк"""
+        return self.request.user
+
+
 class VerifyCodeView(View):
     model = User
     template_name = 'users/verify_code.html'
@@ -46,7 +59,7 @@ class VerifyCodeView(View):
 
         return redirect('users:verify_code')
 
-
+@login_required
 def get_new_password(request):
     if request.method == 'POST':
         email = request.POST.get('email')
