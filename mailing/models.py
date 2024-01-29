@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
+from config import settings
 from services import NULLABLE, STATUS_CHOICES, PERIOD_CHOICES, LOG_CHOICES
 
 
@@ -11,6 +12,7 @@ class Client(models.Model):
     last_name = models.CharField(max_length=50, verbose_name='Фамилия')
     email = models.EmailField(verbose_name='Почта', unique=True)
     comment = models.TextField(verbose_name='Комментарий', **NULLABLE)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name='Владелец', **NULLABLE)
 
     def __str__(self):
         return f'{self.last_name} {self.first_name} ({self.email})'
@@ -19,6 +21,20 @@ class Client(models.Model):
         verbose_name = 'Клиент'
         verbose_name_plural = 'Клиенты'
         ordering = ('last_name', 'first_name')
+
+
+class Message(models.Model):
+    """Сообщение рассылки"""
+    title = models.CharField(max_length=100, verbose_name='Тема письма', default='Без темы')
+    text = models.TextField(verbose_name='Содержание', **NULLABLE)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Сообщение'
+        verbose_name_plural = 'Сообщения'
+        ordering = ('title',)
 
 
 class Mailing(models.Model):
@@ -30,8 +46,9 @@ class Mailing(models.Model):
     status = models.CharField(max_length=20, verbose_name='Статус выполнения', choices=STATUS_CHOICES,
                               default='created')
 
-    send_to = models.ManyToManyField(Client, verbose_name='Клиенты рассылки', **NULLABLE)
-
+    client = models.ManyToManyField(Client, verbose_name='Клиенты рассылки', **NULLABLE)
+    message = models.ForeignKey(Message, verbose_name='Сообщение', on_delete=models.DO_NOTHING, **NULLABLE)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name='Владелец', **NULLABLE)
 
     def __str__(self):
         return f'Начало {self.start_point}, повтор {self.period}, статус {self.status} '
@@ -39,22 +56,6 @@ class Mailing(models.Model):
     class Meta:
         verbose_name = 'Рассылка'
         verbose_name_plural = 'Рассылки'
-
-
-class Message(models.Model):
-    """Сообщение рассылки"""
-    title = models.CharField(max_length=100, verbose_name='Тема письма', default='Без темы')
-    text = models.TextField(verbose_name='Содержание', **NULLABLE)
-
-    mailing = models.ForeignKey(Mailing, verbose_name='Рассылка', on_delete=models.DO_NOTHING, **NULLABLE)
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = 'Сообщение'
-        verbose_name_plural = 'Сообщения'
-        ordering = ('title',)
 
 
 class Log(models.Model):

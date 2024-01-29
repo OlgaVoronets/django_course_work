@@ -1,3 +1,6 @@
+from django.conf import settings
+from django.core.mail import send_mail
+
 NULLABLE = {'null': True, 'blank': True}
 
 """Статусы рассылки"""
@@ -26,6 +29,16 @@ class StileFormMixin:
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
+
+
+def send_mailing(new_user):
+    """Функция отправки сообщения с кодом подтверждения регистрации"""
+    send_mail(
+            subject='Подтверждение регистрации',
+            message=f'Код подтверждения  {new_user.verify_code}',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[new_user.email]
+        )
 
 
 
