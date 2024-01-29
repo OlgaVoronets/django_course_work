@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
 from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView, DetailView
 
+from blog.models import Post
 from mailing.forms import ClientForm, MailingForm, MessageForm
 from mailing.models import Mailing, Client, Message, Log
 
@@ -14,6 +15,15 @@ from mailing.models import Mailing, Client, Message, Log
 class HomePageView(TemplateView):
     """Отображение домашней страницы"""
     template_name = 'mailing/main_page.html'
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        context_data['mailing_count'] = Mailing.objects.all().count()
+        context_data['active_mailing_count'] = Mailing.objects.filter(is_active=True,).count()
+        context_data['clients_count'] = Client.objects.all().distinct().count()
+        context_data['posts'] = Post.objects.all()[:3]
+
+        return context_data
 
 
 class MailingListView(LoginRequiredMixin, ListView):
