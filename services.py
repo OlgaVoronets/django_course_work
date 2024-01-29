@@ -1,3 +1,5 @@
+import datetime
+
 from django.conf import settings
 from django.core.mail import send_mail
 
@@ -31,113 +33,39 @@ class StileFormMixin:
             field.widget.attrs['class'] = 'form-control'
 
 
-def send_mailing(new_user):
-    """Функция отправки сообщения с кодом подтверждения регистрации"""
-    send_mail(
-            subject='Подтверждение регистрации',
-            message=f'Код подтверждения  {new_user.verify_code}',
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[new_user.email]
-        )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# def my_job():
+#     now = datetime.datetime.now()
+#     mailings = Mailing.objects.filter(status='created')
+#
+#     for mailing in mailings:
+#         if mailing.start_point <= now <= mailing.stop_point:
+#             mailing.status = 'started'
+#             send_mail(
+#                         subject=message.title,
+#                         message=message.text,
+#                         from_email=settings.EMAIL_HOST_USER,
+#                         recipient_list=[client.email],
+#                         fail_silently=False
+#                                 )
+#
+#
+#
+#
+#
+# def weekly_tasks():
+#     mailings = MailingSettings.objects.filter(periodicity="Раз в неделю", status="Запущена")
+#     if mailings.exists():
+#         for mailing in mailings:
+#             send_mailling(mailing)
+#
+#
+# def monthly_tasks():
+#     mailings = MailingSettings.objects.filter(periodicity="Раз в месяц", status="Запущена")
+#     if mailings.exists():
+#         for mailing in mailings:
+#             send_mailling(mailing)
+#
 
 
 
@@ -181,24 +109,3 @@ def send_mailing(new_user):
 #     else:
 #         mailing.status = MailingSettings.COMPLETED
 #         mailing.save()
-
-
-# def daily_tasks():
-#     mailings = MailingSettings.objects.filter(periodicity="Раз в день", status="Запущена")
-#     if mailings.exists():
-#         for mailing in mailings:
-#             send_mailling(mailing)
-#
-#
-# def weekly_tasks():
-#     mailings = MailingSettings.objects.filter(periodicity="Раз в неделю", status="Запущена")
-#     if mailings.exists():
-#         for mailing in mailings:
-#             send_mailling(mailing)
-#
-#
-# def monthly_tasks():
-#     mailings = MailingSettings.objects.filter(periodicity="Раз в месяц", status="Запущена")
-#     if mailings.exists():
-#         for mailing in mailings:
-#             send_mailling(mailing)

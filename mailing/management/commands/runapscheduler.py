@@ -16,9 +16,6 @@ logger = logging.getLogger(__name__)
 
 def my_job():
     # Логика обработки вашего задания...
-    now = datetime.now()
-
-
     pass
 
 

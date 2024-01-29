@@ -23,20 +23,6 @@ class Client(models.Model):
         ordering = ('last_name', 'first_name')
 
 
-class Message(models.Model):
-    """Сообщение рассылки"""
-    title = models.CharField(max_length=100, verbose_name='Тема письма', default='Без темы')
-    text = models.TextField(verbose_name='Содержание', **NULLABLE)
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = 'Сообщение'
-        verbose_name_plural = 'Сообщения'
-        ordering = ('title',)
-
-
 class Mailing(models.Model):
     """Настройки рассылки"""
 
@@ -47,8 +33,8 @@ class Mailing(models.Model):
                               default='created')
 
     client = models.ManyToManyField(Client, verbose_name='Клиенты рассылки', **NULLABLE)
-    message = models.ForeignKey(Message, verbose_name='Сообщение', on_delete=models.DO_NOTHING, **NULLABLE)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name='Владелец', **NULLABLE)
+
 
     def __str__(self):
         return f'Начало {self.start_point}, повтор {self.period}, статус {self.status} '
@@ -58,6 +44,21 @@ class Mailing(models.Model):
         verbose_name_plural = 'Рассылки'
 
 
+class Message(models.Model):
+    """Сообщение рассылки"""
+    title = models.CharField(max_length=100, verbose_name='Тема письма', default='Без темы')
+    text = models.TextField(verbose_name='Содержание', **NULLABLE)
+    mailing = models.ForeignKey(Mailing, verbose_name='Сообщение', on_delete=models.DO_NOTHING, **NULLABLE)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Сообщение'
+        verbose_name_plural = 'Сообщения'
+        ordering = ('title',)
+
+
 class Log(models.Model):
     """Логи рассылки"""
     attempt_time = models.DateTimeField(verbose_name='Дата и время последней попытки', **NULLABLE)
@@ -65,6 +66,7 @@ class Log(models.Model):
     server_response = models.TextField(verbose_name='Ответ почтового сервера', **NULLABLE)
 
     mailing = models.ForeignKey(Mailing, verbose_name='Рассылка', on_delete=models.DO_NOTHING, **NULLABLE)
+
 
     def __str__(self):
         return f'Попытка отправки {self.attempt_time}, статус - {self.attempt_status}'
