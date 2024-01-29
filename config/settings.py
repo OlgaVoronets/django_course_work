@@ -41,11 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'client',
-    'mailing',
-    'mailing_log',
-    'message',
     'django_apscheduler',
+    'mailing'
 
 ]
 
