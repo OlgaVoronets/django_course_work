@@ -41,11 +41,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'client',
-    'mailing',
-    'mailing_log',
-    'message',
     'django_apscheduler',
+    'mailing',
+    'users',
+    'blog'
 
 ]
 
@@ -141,9 +140,9 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# AUTH_USER_MODEL = 'users.User'
-# LOGOUT_REDIRECT_URL = '/'
-# LOGIN_REDIRECT_URL = '/'
+AUTH_USER_MODEL = 'users.User'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/'
 
 EMAIL_HOST = 'smtp.yandex.ru'
 EMAIL_PORT = 465
