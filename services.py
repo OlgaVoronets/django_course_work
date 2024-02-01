@@ -1,55 +1,79 @@
-import datetime
+from datetime import datetime, timedelta
 from smtplib import SMTPException
 
+from django import forms
 from django.conf import settings
 from django.core.mail import send_mail
+from django.utils import timezone
+
 
 from mailing.models import Mailing, Log
 
 
 class StileFormMixin:
-    """Класс-миксин для стилизации форм """
+    """Стилизация форм."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+            if not isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs['class'] = 'form-control'
+
+
+def change_status(mailing, check_time) -> None:
+    if mailing.status == 'created':
+        mailing.status = 'started'
+    elif mailing.status == 'started' and mailing.stop_point <= check_time:
+        mailing.status = 'completed'
+
+
+def change_start_point(mailing, check_time):
+
+    if mailing.start_point < check_time:
+        if mailing.period == 'daily':
+            mailing.start_point += timedelta(days=1)
+        elif mailing.period == 'weekly':
+            mailing.start_point += timedelta(days=7)
+        elif mailing.period == 'monthly':
+            mailing.start_point += timedelta(days=30)
 
 
 def my_job():
-    now = datetime.datetime.now()
-    mailings = Mailing.objects.filter(status="started")
-    for mailing in mailings:
-        if mailing.start_point <= now <= mailing.stop_point:
-            for message in mailing.messages.all():
-                for client in mailing.clients.all():
+    print('my_job работает')
+    now = datetime.now()
+    now = timezone.make_aware(now, timezone.get_current_timezone())
+    mailings = Mailing.objects.filter(is_active=True)
+    if mailings:
+        for mailing in mailings:
+            if mailing.start_point <= now <= mailing.stop_point:
+                change_status(mailing, now)
+                for client in mailing.client.all():
                     try:
                         response = send_mail(
-                            subject=message.title,
-                            message=message.text,
+                            subject=mailing.message.title,
+                            message=mailing.message.text,
                             from_email=settings.EMAIL_HOST_USER,
                             recipient_list=[client.email],
                             fail_silently=False
                         )
-                        mailing_log = Log.object.create(
+                        mailing_log = Log.objects.create(
                             attempt_time=mailing.start_point,
                             attempt_status=True,
                             server_response=response,
                             mailing=mailing,
-                            client=client)
+                            client=client
+                        )
                         mailing_log.save()
-                        if mailing.period == 'daily':
-                            mailing.start_point += datetime.timedelta(days=1)
-                        elif mailing.period == 'weekly':
-                            mailing.start_point += datetime.timedelta(days=7)
-                        elif mailing.period == 'monthly':
-                            mailing.start_point += datetime.timedelta(days=30)
-                        print(mailing_log)
-                    except Exception as error:
-                        mailing_log = Log.object.create(
+                        change_start_point(mailing, now)
+                        print("mailing_log сохранен")
+                    except SMTPException as error:
+                        mailing_log = Log.objects.create(
                             attempt_time=mailing.start_point,
-                            attempt_status=True,
+                            attempt_status=False,
                             server_response=error,
                             mailing=mailing,
-                            client=client)
+                            client=client
+                        )
                         mailing_log.save()
-                        print(mailing_log)
+                        print(error)
+    else:
+        print('no mailings')

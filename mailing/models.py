@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.functions import datetime
 from django.utils import timezone
 
 from config import settings
@@ -25,6 +26,20 @@ class Client(models.Model):
         ordering = ('last_name', 'first_name')
 
 
+class Message(models.Model):
+    """Сообщение рассылки"""
+    title = models.CharField(max_length=100, verbose_name='Тема письма', default='Без темы')
+    text = models.TextField(verbose_name='Содержание', **NULLABLE)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Сообщение'
+        verbose_name_plural = 'Сообщения'
+        ordering = ('title',)
+
+
 class Mailing(models.Model):
     """Настройки рассылки"""
     """Статусы рассылки"""
@@ -41,16 +56,17 @@ class Mailing(models.Model):
         ('monthly', 'Ежемесячно'),
     ]
 
-    start_point = models.DateTimeField(verbose_name='Начать рассылку', default=timezone.now)
-    stop_point = models.DateTimeField(verbose_name='Завершить рассылку', default=timezone.now)
+    start_point = models.DateTimeField(verbose_name='Начать рассылку', default=datetime.datetime.now)
+    stop_point = models.DateTimeField(verbose_name='Завершить рассылку', default=datetime.datetime.now)
     period = models.CharField(max_length=20, verbose_name='Периодичность', choices=PERIOD_CHOICES, default='once')
     status = models.CharField(max_length=20, verbose_name='Статус выполнения', choices=STATUS_CHOICES,
                               default='created')
 
-    client = models.ManyToManyField(Client, verbose_name='Клиенты рассылки', **NULLABLE)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name='Владелец', **NULLABLE)
-    is_active = models.BooleanField(default=True, verbose_name='Активная')
+    client = models.ManyToManyField(Client, verbose_name='Клиенты рассылки')
+    message = models.ForeignKey(Message, verbose_name='Сообщение', on_delete=models.CASCADE, **NULLABLE)
 
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING, verbose_name='Владелец', **NULLABLE)
+    is_active = models.BooleanField(default=True, verbose_name='Активная')
 
     def __str__(self):
         return f'Начало {self.start_point}, повтор {self.period}, статус {self.status} '
@@ -61,21 +77,6 @@ class Mailing(models.Model):
         permissions = [
             ('set_is_active', 'Изменить aктивность'),
         ]
-
-
-class Message(models.Model):
-    """Сообщение рассылки"""
-    title = models.CharField(max_length=100, verbose_name='Тема письма', default='Без темы')
-    text = models.TextField(verbose_name='Содержание', **NULLABLE)
-    mailing = models.ForeignKey(Mailing, verbose_name='Сообщение', on_delete=models.DO_NOTHING, **NULLABLE)
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = 'Сообщение'
-        verbose_name_plural = 'Сообщения'
-        ordering = ('title',)
 
 
 class Log(models.Model):
@@ -89,7 +90,7 @@ class Log(models.Model):
     attempt_status = models.CharField(max_length=10, verbose_name='Статус попытки', choices=LOG_CHOICES, default=True)
     server_response = models.TextField(verbose_name='Ответ почтового сервера', **NULLABLE)
 
-    mailing = models.ForeignKey(Mailing, verbose_name='Рассылка', on_delete=models.DO_NOTHING, **NULLABLE)
+    mailing = models.ForeignKey(Mailing, verbose_name='Рассылка', on_delete=models.CASCADE, **NULLABLE)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, verbose_name='клиент рассылки', **NULLABLE)
 
     def __str__(self):

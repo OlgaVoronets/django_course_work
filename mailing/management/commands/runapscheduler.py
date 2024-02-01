@@ -15,9 +15,6 @@ from services import my_job
 logger = logging.getLogger(__name__)
 
 
-def my_job():
-    # Логика обработки вашего задания...
-    pass
 
 
 # Декоратор close_old_connections гарантирует, что соединения с базой данных, которые стали

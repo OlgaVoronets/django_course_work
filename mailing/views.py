@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import inlineformset_factory
 from django.http import Http404
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 
 from django.urls import reverse_lazy, reverse
 from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView, DetailView
@@ -43,24 +43,10 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('mailing:home')
 
     def form_valid(self, form):
-        formset = self.get_context_data()['formset']
-        self.object.owner = self.request.user
         self.object = form.save()
-        if formset.is_valid():
-            formset.instance = self.object
-            formset.save()
+        self.object.owner = self.request.user
+        self.object.save()
         return super().form_valid(form)
-
-    def get_context_data(self, **kwargs):
-        context_data = super().get_context_data(**kwargs)
-        message_formset = inlineformset_factory(Mailing, Message, form=MessageForm, extra=1)
-
-        if self.request.method == 'POST':
-            context_data['formset'] = message_formset(self.request.POST, instance=self.object)
-        else:
-            context_data['formset'] = message_formset(instance=self.object)
-
-        return context_data
 
 
 class MailingUpdateView(LoginRequiredMixin, UpdateView):
@@ -71,38 +57,15 @@ class MailingUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         self.object = super().get_object(queryset)
-        if self.object.owner != self.request.user:
+        if not self.request.user.is_superuser or self.object.owner != self.request.user:
             raise Http404
         return self.object
-
-    def get_context_data(self, **kwargs):
-        context_data = super().get_context_data(**kwargs)
-        message_formset = inlineformset_factory(Mailing, Message, form=MessageForm, extra=1)
-        if self.request.method == 'POST':
-            context_data['formset'] = message_formset(self.request.POST, instance=self.object)
-        else:
-            context_data['formset'] = message_formset(instance=self.object)
-        return context_data
-
-    def form_valid(self, form):
-        formset = self.get_context_data()['formset']
-        self.object = form.save()
-        if formset.is_valid():
-            formset.instance = self.object
-            formset.save()
-        return super().form_valid(form)
 
 
 class MailingDeleteView(LoginRequiredMixin, DeleteView):
     """Удаление рассылки"""
     model = Mailing
     success_url = reverse_lazy('mailing:home')
-
-    def get_object(self, queryset=None):
-        self.object = super().get_object(queryset)
-        if self.object.owner != self.request.user:
-            raise Http404
-        return self.object
 
 
 class ClientListView(ListView):
@@ -128,6 +91,20 @@ class ClientUpdateView(LoginRequiredMixin, UpdateView):
         if self.object.owner != self.request.user:
             raise Http404
         return self.object
+
+
+class MessageListView(LoginRequiredMixin, ListView):
+    """Просмотр списка сообщений"""
+    model = Message
+
+
+class MessageCreateView(LoginRequiredMixin, CreateView):
+    """Создание карточки клиента"""
+    model = Message
+    form_class = MessageForm
+    success_url = reverse_lazy('mailing:message_list')
+
+
 
 
 class LogListView(ListView):
