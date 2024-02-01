@@ -22,8 +22,11 @@ class StileFormMixin:
 def change_status(mailing, check_time) -> None:
     if mailing.status == 'created':
         mailing.status = 'started'
+        print('started')
     elif mailing.status == 'started' and mailing.stop_point <= check_time:
         mailing.status = 'completed'
+        print('completed')
+    mailing.save()
 
 
 def change_start_point(mailing, check_time):
@@ -35,6 +38,7 @@ def change_start_point(mailing, check_time):
             mailing.start_point += timedelta(days=7)
         elif mailing.period == 'monthly':
             mailing.start_point += timedelta(days=30)
+        mailing.save()
 
 
 def my_job():
