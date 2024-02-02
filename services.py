@@ -48,8 +48,8 @@ def my_job():
     mailings = Mailing.objects.filter(is_active=True)
     if mailings:
         for mailing in mailings:
+            change_status(mailing, now)
             if mailing.start_point <= now <= mailing.stop_point:
-                change_status(mailing, now)
                 for client in mailing.client.all():
                     try:
                         response = send_mail(
