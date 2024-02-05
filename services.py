@@ -6,12 +6,12 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
 
-
 from mailing.models import Mailing, Log
 
 
 class StileFormMixin:
     """Стилизация форм."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
@@ -30,7 +30,6 @@ def change_status(mailing, check_time) -> None:
 
 
 def change_start_point(mailing, check_time):
-
     if mailing.start_point < check_time:
         if mailing.period == 'daily':
             mailing.start_point += timedelta(days=1)
@@ -48,8 +47,8 @@ def my_job():
     mailings = Mailing.objects.filter(is_active=True)
     if mailings:
         for mailing in mailings:
+            change_status(mailing, now)
             if mailing.start_point <= now <= mailing.stop_point:
-                change_status(mailing, now)
                 for client in mailing.client.all():
                     try:
                         response = send_mail(
@@ -81,3 +80,12 @@ def my_job():
                         print(error)
     else:
         print('no mailings')
+
+
+def send_new_password(email, new_password):
+    send_mail(
+        subject='Пароль изменен',
+        message=f'Новый пароль {new_password}',
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=[email]
+    )

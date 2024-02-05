@@ -10,7 +10,8 @@ from django.views import View
 from django.views.generic import CreateView, UpdateView
 
 from config import settings
-from users.forms import UserRegisterForm, NewPasswordForm, UserForm
+from services import send_new_password
+from users.forms import UserRegisterForm, UserForm
 from users.models import User
 
 
@@ -34,8 +35,8 @@ class RegisterView(CreateView):
 
 class UserUpdateView(LoginRequiredMixin, UpdateView):
     model = User
-    success_url = reverse_lazy('users:profile')
     form_class = UserForm
+    success_url = reverse_lazy('users:profile')
 
     def get_object(self, queryset=None):
         """редактируем текущего пользователя без передачи пк"""
@@ -59,25 +60,11 @@ class VerifyCodeView(View):
 
         return redirect('users:verify_code')
 
+
 @login_required
 def get_new_password(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        user = User.objects.get(email=email)
-        new_password = ''.join([str(random.randint(0, 9)) for _ in range(12)])
-        send_mail(
-            subject='Пароль изменен',
-            message=f'Ваш новый пароль {new_password}',
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[user.email]
-        )
-        user.set_password(new_password)
-        user.save()
-        return redirect(reverse('users:login'))
-    else:
-        form = NewPasswordForm
-        context = {
-            'form': form
-        }
-        return render(request, 'users/new_password.html', context)
-
+    new_password = ''.join([str(random.randint(0, 9)) for _ in range(12)])
+    request.user.set_password(new_password)
+    request.user.save()
+    send_new_password(request.user.email, new_password)
+    return redirect(reverse('users:login'))

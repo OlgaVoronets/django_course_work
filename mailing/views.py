@@ -1,8 +1,8 @@
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.forms import inlineformset_factory
+
 from django.http import Http404
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
 
 from django.urls import reverse_lazy, reverse
 from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView, DetailView
@@ -19,7 +19,7 @@ class HomePageView(TemplateView):
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
         context_data['mailing_count'] = Mailing.objects.all().count()
-        context_data['active_mailing_count'] = Mailing.objects.filter(is_active=True,).count()
+        context_data['active_mailing_count'] = Mailing.objects.filter(is_active=True, ).count()
         context_data['clients_count'] = Client.objects.all().distinct().count()
         context_data['posts'] = Post.objects.all()[:3]
 
@@ -103,8 +103,6 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
     model = Message
     form_class = MessageForm
     success_url = reverse_lazy('mailing:message_list')
-
-
 
 
 class LogListView(ListView):

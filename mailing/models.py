@@ -1,9 +1,6 @@
 from django.db import models
 from django.db.models.functions import datetime
-from django.utils import timezone
-
 from config import settings
-
 
 NULLABLE = {'null': True, 'blank': True}
 
@@ -65,7 +62,8 @@ class Mailing(models.Model):
     client = models.ManyToManyField(Client, verbose_name='Клиенты рассылки')
     message = models.ForeignKey(Message, verbose_name='Сообщение', on_delete=models.CASCADE, **NULLABLE)
 
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING, verbose_name='Владелец', **NULLABLE)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING, verbose_name='Владелец',
+                              **NULLABLE)
     is_active = models.BooleanField(default=True, verbose_name='Активная')
 
     def __str__(self):
@@ -99,4 +97,3 @@ class Log(models.Model):
     class Meta:
         verbose_name = 'Лог'
         verbose_name_plural = 'Логи'
-
