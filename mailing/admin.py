@@ -9,7 +9,3 @@ admin.site.register(Client)
 admin.site.register(Log)
 
 admin.site.register(Message)
-
-
-
-

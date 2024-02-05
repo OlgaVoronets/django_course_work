@@ -20,4 +20,3 @@ class MessageForm(StileFormMixin, forms.ModelForm):
     class Meta:
         model = Message
         fields = '__all__'
-

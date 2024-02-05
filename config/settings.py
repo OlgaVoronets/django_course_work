@@ -155,15 +155,15 @@ APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 APSCHEDULER_RUN_NOW_TIMEOUT = 25  # Seconds
 
 
-# CACHE_ENABLED = os.getenv('CACHE_ENABLED').lower() in ('true', 'yes', 'y', '1')
-#
-# if CACHE_ENABLED:
-#     CACHES = {
-#         "default": {
-#             "BACKEND": "django.core.cache.backends.redis.RedisCache",
-#             "LOCATION": os.getenv('CACHE_LOCATION'),
-#         }
-#     }
+CACHE_ENABLED = os.getenv('CACHE_ENABLED').lower() in ('true', 'yes', 'y', '1')
+
+if CACHE_ENABLED:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": os.getenv('CACHE_LOCATION'),
+        }
+    }
 
 # if __name__ == '__main__':
 #     print(EMAIL_HOST_USER)

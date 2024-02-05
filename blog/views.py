@@ -1,11 +1,9 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404
-from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from blog.models import Post
-from pytils.translit import slugify
 
 
 class PostListView(ListView):
@@ -18,7 +16,7 @@ class PostDetailView(LoginRequiredMixin, DetailView):
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
-    fields = ('title', 'body', )
+    fields = ('title', 'body',)
     success_url = reverse_lazy('blog:post_list')
 
     def form_valid(self, form):
@@ -51,4 +49,3 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
         if self.object.owner != self.request.user:
             raise Http404
         return self.object
-

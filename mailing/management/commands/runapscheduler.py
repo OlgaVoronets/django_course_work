@@ -1,6 +1,4 @@
 import logging
-from datetime import datetime
-
 from django.conf import settings
 
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -13,8 +11,6 @@ from django_apscheduler import util
 from services import my_job
 
 logger = logging.getLogger(__name__)
-
-
 
 
 # Декоратор close_old_connections гарантирует, что соединения с базой данных, которые стали
